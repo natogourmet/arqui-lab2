@@ -1,6 +1,6 @@
 
 .data
-letters_size: .byte 0x34
+letters_size: .byte 52
 printing: .word 0
 
 input_file: .asciiz "digram_test.java"
@@ -92,7 +92,7 @@ Loop1:
 		li 	$v0, 15		# System call for write to a file
 		move 	$a0, $s2	# Restore file descriptor (open for writing)
 		la 	$a1, printing	# Address of buffer from which to write
-		li 	$a2, 2		# Number of characters to write
+		li 	$a2, 1		# Number of characters to write
 		syscall
 		
 		li   $v0, 16      	# system call for close file
