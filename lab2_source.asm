@@ -1,6 +1,7 @@
 
 .data
 letters_size: .byte 52
+digram_dict_pos:	.word 0
 printing: .word 0
 
 input_file: .asciiz "digram_test.java"
@@ -19,7 +20,11 @@ input_buffer: .space 20480
 
 Main:
 
+	li $s6, 2
 	lbu $s7, letters_size
+	la $t0, dict_buffer
+	add $t0, $t0, $s7
+	sw $t0, digram_dict_pos
 
 	# Opens input file as read-only mode
 	li 	$v0, 13
@@ -70,11 +75,13 @@ Main:
 	la $t0, input_buffer
 Loop1:
 
-	lhu $t1, ($t0)			# Loads input value
+	lbu $t1, ($t0)			# Loads input value
+	lbu $t2, 1($t0)			# Loads input value
+	sll $t2, $t2, 8
+	add $t1, $t1, $t2
 	beqz $t1, End_Loop1		# Finaliza si el digrama es null
 	
-	la $t2, dict_buffer		# Loads dict buffer
-	add $t2, $t2, $s7		# Prepara la primera posicion de digramas
+	la $t2, digram_dict_pos		# Loads dict buffer
 	
 	Loop2:
 	
@@ -109,21 +116,52 @@ Loop1:
 		
 		Else2_Loop2:		# Si no existe digrama en dict
 		
-			lbu 	$t0, ($t0)	# Se carga letra del input
-			la 	$t1, dict_buffer# Se carga pos del dict
-			lb	$t1, ($t1)	# Se carga letra del dict
+			li	$s6, 1
+			lbu 	$t1, ($t0)	# Se carga letra del input
+			la 	$t2, dict_buffer# Se carga pos del dict
+			la	$t8, digram_dict_pos
 			
 			Loop3:
 			
-				beq $t0, $t1, 
+				lbu	$t3, ($t2)	# Se carga letra del dict
+				
+				bge $t2, $t8, End_Loop3 # Si final de letras en diccionario
+				
+				bne $t1, $t3, Else1_Loop3 # Si letras no son iguales
+				
+				move 	$a0, $t2	# Encoder first parameter
+				la 	$a1, dict_buffer# Encoder second parameter
+				jal	Encoder		# Encoder call
+				move 	$t4, $v0	# Encoder returned value
+		
+				sw	$t4, printing	# Saving encoded value in Memory
+				li 	$v0, 15		# System call for write to a file
+				move 	$a0, $s2	# Restore file descriptor (open for writing)
+				la 	$a1, printing	# Address of buffer from which to write
+				li 	$a2, 1		# Number of characters to write
+				syscall
+		
+				li   $v0, 16      	# system call for close file
+				move $a0, $s0    	# file descriptor to close
+				syscall			# close file
+		
+				j End_Loop3
+				
+				
 			
+				Else1_Loop3:
+					
+					addi 	$t2, $t2, 1
+					j Loop3
 			
 			End_Loop3:
 			
+			# TODO: ON CHAR NOT FOUND, DO SOMETHING (CURRENTLY NOT DOING SHIT)
 		
 	End_Loop2:
 	
-	addi $t0, $t0, 2
+	add $t0, $t0, $s6
+	li $s6, 2
 	j Loop1
 	
 	
