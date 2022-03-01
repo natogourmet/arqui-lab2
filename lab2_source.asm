@@ -70,25 +70,25 @@ Main:
 	la $t0, input_buffer
 Loop1:
 
-	lhu $a0, ($t0)			# Loads input value
-	beqz $a0, End_Loop1		# Finaliza si el digrama es null
+	lhu $t1, ($t0)			# Loads input value
+	beqz $t1, End_Loop1		# Finaliza si el digrama es null
 	
-	la $t1, dict_buffer		# Loads dict buffer
-	add $t1, $t1, $s7		# Prepara la primera posicion de digramas
+	la $t2, dict_buffer		# Loads dict buffer
+	add $t2, $t2, $s7		# Prepara la primera posicion de digramas
 	
 	Loop2:
 	
-		lhu $a1, 0($t1)
-		beqz $a1, End_Loop2	# Si no hay mas digramas en dict
+		lhu $t3, ($t2)
+		beqz $t3, Else2_Loop2	# Si no hay mas digramas en dict
 		
-		bne $a0, $a1, Else1_Loop2	# Si el digrama no es igual
+		bne $t1, $t3, Else1_Loop2	# Si el digrama no es igual
 		
-		move 	$a0, $t1	# Encoder first parameter
+		move 	$a0, $t2	# Encoder first parameter
 		la 	$a1, dict_buffer# Encoder second parameter
 		jal	Encoder		# Encoder call
-		move 	$t2, $v0	# Encoder returned value
+		move 	$t4, $v0	# Encoder returned value
 		
-		sw	$t2, printing	# Saving encoded value in Memory
+		sw	$t4, printing	# Saving encoded value in Memory
 		li 	$v0, 15		# System call for write to a file
 		move 	$a0, $s2	# Restore file descriptor (open for writing)
 		la 	$a1, printing	# Address of buffer from which to write
@@ -101,10 +101,25 @@ Loop1:
 		
 		j End_Loop2
 		
-		Else1_Loop2:
+		Else1_Loop2:		# Si el digrama no es igual
 			
-			addi $t1, $t1, 2
+			addi 	$t2, $t2, 2
 			j Loop2
+		
+		
+		Else2_Loop2:		# Si no existe digrama en dict
+		
+			lbu 	$t0, ($t0)	# Se carga letra del input
+			la 	$t1, dict_buffer# Se carga pos del dict
+			lb	$t1, ($t1)	# Se carga letra del dict
+			
+			Loop3:
+			
+				beq $t0, $t1, 
+			
+			
+			End_Loop3:
+			
 		
 	End_Loop2:
 	
