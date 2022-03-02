@@ -79,9 +79,10 @@ Loop1:
 	lbu $t2, 1($t0)			# Loads input value
 	sll $t2, $t2, 8
 	add $t1, $t1, $t2
+	
 	beqz $t1, End_Loop1		# Finaliza si el digrama es null
 	
-	la $t2, digram_dict_pos		# Loads dict buffer
+	lw $t2, digram_dict_pos		# Loads dict buffer
 	
 	Loop2:
 	
@@ -119,7 +120,10 @@ Loop1:
 			li	$s6, 1
 			lbu 	$t1, ($t0)	# Se carga letra del input
 			la 	$t2, dict_buffer# Se carga pos del dict
-			la	$t8, digram_dict_pos
+			lw	$t8, digram_dict_pos
+			
+			move $a0, $t1
+			jal Print
 			
 			Loop3:
 			
@@ -186,5 +190,22 @@ Encoder:
 	End_Encoder:
 	jr	$ra
 
+
+# Makes all the necessary things to print a value
+# params:
+#	- a0: data to print
+# return:
+Print:
+	sw $a0, printing
+	li $v0, 4
+	la $a0, printing
+	syscall
+	
+	li $a0, 0x0a
+	sw $a0, printing
+	li $v0, 4
+	la $a0, printing
+	syscall
+	jr	$ra
 
 End_Program:
