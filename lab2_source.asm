@@ -1,6 +1,6 @@
 
 .data
-letters_size: .byte 52
+letters_size: .byte 98
 digram_dict_pos:	.word 0
 printing: .word 0
 
