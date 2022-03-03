@@ -212,6 +212,69 @@ Encoder:
 	End_Encoder:
 	jr	$ra
 
+####################################################################################################
+# PROCEDURE: Search Digram
+# Searches for the same Digram inside of the dictionary
+# params:
+#	- a0: current input digram address
+# return:
+#	- v0: dictionary's matching character address, or 0 if not found
+Search_Char:
+	lbu 	$t0, ($a0)
+	la	$t1, dict_buffer
+	
+	Search_Char_Loop:
+		lbu	$t2, ($t1)
+		beqz 	$t1, Search_Char_Null
+		bne	$t0, $t2, Search_Char_Loop_Again
+		
+		move 	$a0, $t2
+		la 	$a1, dict_buffer
+		move	$a2, $s2
+		
+		li	$v0, $t1
+		jr	$ra
+	
+	Search_Char_Loop_Again:
+		addi 	$t1, $t1, 1
+		j	Search_Char_Loop
+	
+	Search_Char_Null:
+		li	$v0, 0
+		jr	$ra
+
+####################################################################################################
+# PROCEDURE: Search Character
+# Searches for the same Character inside of the dictionary
+# params:
+#	- a0: current input char address
+# return:
+#	- v0: dictionary's matching character address, or 0 if not found
+Search_Char:
+	lbu 	$t0, ($a0)
+	la	$t1, dict_buffer
+	
+	Search_Char_Loop:
+		lbu	$t2, ($t1)
+		beqz 	$t1, Search_Char_Null
+		bne	$t0, $t2, Search_Char_Loop_Again
+		
+		move 	$a0, $t2
+		la 	$a1, dict_buffer
+		move	$a2, $s2
+		
+		li	$v0, $t1
+		jr	$ra
+	
+	Search_Char_Loop_Again:
+		addi 	$t1, $t1, 1
+		j	Search_Char_Loop
+	
+	Search_Char_Null:
+		li	$v0, 0
+		jr	$ra
+		
+		
 
 ####################################################################################################
 # PROCEDURE: Print
