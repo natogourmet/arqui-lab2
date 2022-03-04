@@ -1,18 +1,18 @@
 
 .data
-letters_size: .byte 98
+letters_size: 		.byte 98
 digram_dict_pos:	.word 0
-printing: .word 0
+printing: 		.word 0
 
-input_file: .asciiz "digram_test.java"
-dict_file: .asciiz "dictionary.txt"
-output_file: .asciiz "output.txt"
+input_file: 		.asciiz "digram_test.java"
+dict_file: 		.asciiz "dictionary.txt"
+output_file: 		.asciiz "output.txt"
 
 
 
 .align 2
-dict_buffer: .space 20480
-input_buffer: .space 20480
+dict_buffer: 	.space 20480
+input_buffer: 	.space 20480
 
 
 
@@ -27,7 +27,7 @@ Main:
 	sw $t0, digram_dict_pos
 
 	# Opens input file as read-only mode
-	li 	$v0, 13
+	li	$v0, 13
 	la 	$a0, input_file
 	li 	$a1, 0
 	li 	$a2, 0
@@ -56,7 +56,7 @@ Main:
 	# Sets reading from input file
 	li 	$v0, 14
 	move 	$a0, $s0
-	la 	$a1, input_buffer
+	la	$a1, input_buffer
 	li 	$a2, 20480
 	syscall
 	move 	$t1, $v0		# TODO: remove

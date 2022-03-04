@@ -18,120 +18,59 @@ input_buffer:	 	.space 20480
 
 .text
 
-Main:
+li 	$s7, 2
+la 	$t0, dict_buffer
+lbu 	$t1, letters_size
+add 	$t0, $t0, $t1
+sw 	$t0, digram_dict_pos
 
-	li $s6, 2
-	lbu $s7, letters_size
-	la $t0, dict_buffer
-	add $t0, $t0, $s7
-	sw $t0, digram_dict_pos
+la 	$a0, input_file		# Opens input file as read-only mode
+la	$a1, input_buffer
+lh	$a2, input_buffer_size
+jal	Open_Read
+
+la 	$a0, dict_file		# Opens dict file as read-only mode
+la	$a1, dict_buffer
+lh	$a2, dict_buffer_size
+jal	Open_Read
+
+li 	$v0, 13			# Opens output file as create, write and append mode
+la 	$a0, output_file
+li 	$a1, 9
+li 	$a2, 0
+syscall
+move 	$s5, $v0
 
 
-	la 	$a0, input_file		# Opens input file as read-only mode
-	la	$a1, input_buffer
-	lh	$a2, input_buffer_size
-	jal	Open_Read
-	
-	la 	$a0, dict_file		# Opens dict file as read-only mode
-	la	$a1, dict_buffer
-	lh	$a2, dict_buffer_size
-	jal	Open_Read
-	
-	li 	$v0, 13			# Opens output file as create, write and append mode
-	la 	$a0, output_file
-	li 	$a1, 9
-	li 	$a2, 0
-	syscall
-	move 	$s2, $v0
-	
-	
-	
-
-	la $t0, input_buffer
+la 	$s0, input_buffer
 Loop1:
 
-	lbu $t1, ($t0)			# Loads input value
-	lbu $t2, 1($t0)			# Loads input value
-	sll $t2, $t2, 8
-	add $t1, $t1, $t2
+	lbu 	$t0, ($s0)		# Loads input value
+	lbu 	$t1, 1($s0)		# Loads input value
+	sll 	$t1, $t1, 8
+	add 	$s1, $t0, $t1
 	
-	beqz $t1, End_Loop1		# Finaliza si el digrama es null
+	beqz 	$s1, End_Loop1		# Finaliza si el digrama es null
 	
-	lw $t2, digram_dict_pos		# Loads dict buffer
+	move	$a0, $s1		# Calls digram search
+	jal	Search_Digram
+	move	$s2, $v0
 	
-	Loop2:
+	bnez 	$v0, On_Found		# If (digValue == 0)
+	li 	$s7, 1
+	lbu	$s1, ($s0)
+	move	$a0, $s1
+	jal	Search_Char
+	move	$s2, $v0
 	
-		lhu $t3, ($t2)
-		beqz $t3, Else2_Loop2	# Si no hay mas digramas en dict
-		
-		bne $t1, $t3, Else1_Loop2	# Si el digrama no es igual
-		
-		move 	$a0, $t2	# Encoder first parameter
-		la 	$a1, dict_buffer# Encoder second parameter
-		jal	Encoder		# Encoder call
-		move 	$t4, $v0	# Encoder returned value
-		
-		sw	$t4, printing	# Saving encoded value in Memory
-		li 	$v0, 15		# System call for write to a file
-		move 	$a0, $s2	# Restore file descriptor (open for writing)
-		la 	$a1, printing	# Address of buffer from which to write
-		li 	$a2, 1		# Number of characters to write
-		syscall
-		
-		li   $v0, 16      	# system call for close file
-		move $a0, $s0    	# file descriptor to close
-		syscall			# close file
-		
-		j End_Loop2
-		
-		Else1_Loop2:		# Si el digrama no es igual
-			
-			addi 	$t2, $t2, 2
-			j Loop2
-		
-		
-		Else2_Loop2:		# Si no existe digrama en dict
-		
-			li	$s6, 1
-			lbu 	$t1, ($t0)	# Se carga letra del input
-			la 	$t2, dict_buffer# Se carga pos del dict
-			lw	$t8, digram_dict_pos
-			
-			move $a0, $t1
-			jal Print
-			
-			Loop3:
-			
-				lbu	$t3, ($t2)	# Se carga letra del dict
-				
-				bge $t2, $t8, End_Loop3 # Si final de letras en diccionario
-				
-				bne $t1, $t3, Else1_Loop3 # Si letras no son iguales
-				
-				
-				move 	$a0, $t2	# Sets to write code
-				la 	$a1, dict_buffer
-				move	$a2, $s2
-				jal Write_Code
-				
-				j End_Loop3
-				
-			
-				Else1_Loop3:
-					
-					addi 	$t2, $t2, 1
-					j Loop3
-			
-			End_Loop3:
-			
-			# TODO: ON CHAR NOT FOUND, DO SOMETHING (CURRENTLY NOT DOING SHIT)
-		
-	End_Loop2:
+	On_Found:
+	move	$a0, $s2
+	move	$a1, $s5
+	jal	Write_Code
 	
-	add $t0, $t0, $s6
-	li $s6, 2
+	add $s0, $s0, $s7
+	li $s7, 2
 	j Loop1
-	
 	
 End_Loop1:
 
@@ -170,8 +109,7 @@ Open_Read:
 # Gets the Encoded value of a DirDigram and sets the SYSCALL to Write it on a File 
 # params:
 #	- a0: Digram dictionary POS
-#	- a1: Dict buffer pos
-#	- a2: File descriptor
+#	- a1: File descriptor
 Write_Code:
 
 	addi 	$sp, $sp, -4
@@ -182,14 +120,10 @@ Write_Code:
 		
 	sw	$v0, printing	# Saving encoded value in Memory
 	li 	$v0, 15		# System call for write to a file
-	move 	$a0, $a2	# Restore file descriptor (open for writing)
+	move 	$a0, $a1	# Restore file descriptor (open for writing)
 	la 	$a1, printing	# Address of buffer from which to write
 	li 	$a2, 1		# Number of characters to write
 	syscall
-		
-	#li   $v0, 16      	# system call for close file
-	#move $a0, $a0    	# file descriptor to close
-	#syscall			# close file
 	
 	jr	$ra
 	
@@ -199,28 +133,59 @@ Write_Code:
 # Returns a code based on the position recieved (dictionary position of a character or digram)
 # params:
 #	- a0: current digram pos
-#	- a1: digrams dict start pos
 # return:
 #	- v0: encoded value
 Encoder: 
-	sub 	$v0, $a0, $a1
-	bleu 	$v0, $s7, End_Encoder
-	sub 	$v0, $v0, $s7
-	srl 	$v0, $v0, 1
-	add 	$v0, $v0, $s7
+	la	$t0, dict_buffer
+	sub 	$t0, $a0, $t0
+	
+	lw	$t1, letters_size
+	bleu 	$t0, $t1, End_Encoder
+	sub 	$t0, $t0, $t1
+	srl 	$t0, $t0, 1
+	add 	$t0, $t0, $t1
 	
 	End_Encoder:
+	move	$v0, $t0
 	jr	$ra
 
 ####################################################################################################
 # PROCEDURE: Search Digram
 # Searches for the same Digram inside of the dictionary
 # params:
-#	- a0: current input digram address
+#	- a0: digram to look for
+# return:
+#	- v0: dictionary's matching digram address, or 0 if not found
+Search_Digram:
+	move 	$t0, $a0
+	lw	$t1, digram_dict_pos
+	
+	Search_Digram_Loop:
+		lhu	$t2, ($t1)
+		beqz 	$t1, Search_Digram_Null
+		bne	$t0, $t2, Search_Digram_Loop_Again
+
+		move	$v0, $t1
+		jr	$ra
+
+	Search_Digram_Loop_Again:
+		addi 	$t1, $t1, 2
+		j	Search_Digram_Loop
+	
+	Search_Digram_Null:
+		li	$v0, 0
+		jr	$ra
+
+
+####################################################################################################
+# PROCEDURE: Search Character
+# Searches for the same Character inside of the dictionary
+# params:
+#	- a0: character to look for
 # return:
 #	- v0: dictionary's matching character address, or 0 if not found
 Search_Char:
-	lbu 	$t0, ($a0)
+	move 	$t0, $a0
 	la	$t1, dict_buffer
 	
 	Search_Char_Loop:
@@ -228,11 +193,7 @@ Search_Char:
 		beqz 	$t1, Search_Char_Null
 		bne	$t0, $t2, Search_Char_Loop_Again
 		
-		move 	$a0, $t2
-		la 	$a1, dict_buffer
-		move	$a2, $s2
-		
-		li	$v0, $t1
+		move	$v0, $t1
 		jr	$ra
 	
 	Search_Char_Loop_Again:
@@ -243,38 +204,6 @@ Search_Char:
 		li	$v0, 0
 		jr	$ra
 
-####################################################################################################
-# PROCEDURE: Search Character
-# Searches for the same Character inside of the dictionary
-# params:
-#	- a0: current input char address
-# return:
-#	- v0: dictionary's matching character address, or 0 if not found
-Search_Char:
-	lbu 	$t0, ($a0)
-	la	$t1, dict_buffer
-	
-	Search_Char_Loop:
-		lbu	$t2, ($t1)
-		beqz 	$t1, Search_Char_Null
-		bne	$t0, $t2, Search_Char_Loop_Again
-		
-		move 	$a0, $t2
-		la 	$a1, dict_buffer
-		move	$a2, $s2
-		
-		li	$v0, $t1
-		jr	$ra
-	
-	Search_Char_Loop_Again:
-		addi 	$t1, $t1, 1
-		j	Search_Char_Loop
-	
-	Search_Char_Null:
-		li	$v0, 0
-		jr	$ra
-		
-		
 
 ####################################################################################################
 # PROCEDURE: Print
