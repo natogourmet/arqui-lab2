@@ -45,31 +45,31 @@ move 	$s5, $v0
 la 	$s0, input_buffer
 Loop1:
 
-	lbu 	$t0, ($s0)		# Loads input value
-	lbu 	$t1, 1($s0)		# Loads input value
-	sll 	$t1, $t1, 8
+	lbu 	$t0, ($s0)		# Loads first char of input digram
+	lbu 	$t1, 1($s0)		# Loads second char of input digram
+	sll 	$t1, $t1, 8		# Conjoins both chars
 	add 	$s1, $t0, $t1
 	
-	beqz 	$s1, End_Loop1		# Finaliza si el digrama es null
+	beqz 	$s1, End_Loop1		# Ends if the char value is 0 (End of String)
 	
-	move	$a0, $s1		# Calls digram search
-	jal	Search_Digram
+	move	$a0, $s1
+	jal	Search_Digram		# Search for digram in dict
 	move	$s2, $v0
 	
-	bnez 	$v0, On_Found		# If (digValue == 0)
-	li 	$s7, 1
+	bnez 	$v0, On_Found		# If (digValue == 0) Digram not found
+	li 	$s7, 1			# Changes moving factor (Since only one char is being read, the next input pos is +1)
 	lbu	$s1, ($s0)
 	move	$a0, $s1
-	jal	Search_Char
+	jal	Search_Char		# Searches for char in dict
 	move	$s2, $v0
 	
 	On_Found:
-	move	$a0, $s2
+	move	$a0, $s2		# When a digram or char was found
 	move	$a1, $s5
 	jal	Write_Code
 	
 	add $s0, $s0, $s7
-	li $s7, 2
+	li $s7, 2			# Resets the moving factor to 2
 	j Loop1
 	
 End_Loop1:
@@ -224,4 +224,7 @@ Print:
 	syscall
 	jr	$ra
 
+
+####################################################################################################
+# END OF THE PROGRAM
 End_Program:
