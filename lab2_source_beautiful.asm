@@ -3,8 +3,8 @@
 letters_size: 		.byte 98
 digram_dict_pos:	.word 0
 printing: 		.word 0
-input_buffer_size:	.half 20480
-dict_buffer_size:	.half 20480
+input_buffer_size:	.half 30000
+dict_buffer_size:	.half 414
 
 input_file: 		.asciiz "digram_test.java"
 dict_file: 		.asciiz "dictionary.txt"
@@ -14,8 +14,10 @@ message2: 		.asciiz "The compressed file has a size of: "
 message3: 		.asciiz "The compression rate achieved was: "
 
 .align 2
-dict_buffer: 		.space 20480
-input_buffer:	 	.space 20480
+input_buffer:	 	.space 30000
+null_space:		.space 4
+dict_buffer: 		.space 414
+
 
 
 
@@ -53,7 +55,7 @@ Loop1:
 
 	lbu 	$t0, ($s0)		# Loads first char of input digram
 	lbu 	$t1, 1($s0)		# Loads second char of input digram
-	sll 	$t1, $t1, 8		# Conjoins both chars
+	sll 	$t1, $t1, 8		# Concats both chars
 	add 	$s1, $t0, $t1
 	
 	beqz 	$s1, End_Loop1		# Ends if the char value is 0 (End of String)
@@ -169,7 +171,7 @@ Search_Digram:
 	
 	Search_Digram_Loop:
 		lhu	$t2, ($t1)
-		beqz 	$t1, Search_Digram_Null
+		beqz 	$t2, Search_Digram_Null
 		bne	$t0, $t2, Search_Digram_Loop_Again
 
 		move	$v0, $t1
@@ -197,7 +199,7 @@ Search_Char:
 	
 	Search_Char_Loop:
 		lbu	$t2, ($t1)
-		beqz 	$t1, Search_Char_Null
+		beqz 	$t2, Search_Char_Null
 		bne	$t0, $t2, Search_Char_Loop_Again
 		
 		move	$v0, $t1
@@ -236,7 +238,6 @@ Print:
 # END OF THE PROGRAM
 End_Program:
 
-li	$s5, 80
 mtc1	$s6, $f0
 cvt.s.w	$f0, $f0
 mtc1	$s5, $f1

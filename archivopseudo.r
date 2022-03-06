@@ -1,43 +1,42 @@
+
+/******************************************************************************************
 inputPos
-dicPos
-carRaro = 99
-maxLetras = 52
-dicDigramPos = dicPos + maxLetras
-CIPos = inputPos //current input position
-digram = cargarDigrama(CIPos)
-inputOffset = 2
+move
+dictStart
+dictDigsStart
 
-while ( digram != null ){
-    CDPos = dicDigramPos
-    dicDigram = cargarDigrama(CDPos)
-    while (dicDigram != null ){
-        if ( dicDigram == digram ){
-            escribirPos(CDPos)
-            break;
-        }
-        CDPos += 2
-        dicDigram = cargarDigrama(CDPos)
+inputValue = loadDigram(inputPos)
+while (inputValue != null) {
+    move = 2;
+    valueDictPos = searchDigramPos(inputValue)
+    if (valueDictPos == 0) {
+        move = 1;
+        inputValue = loadChar(inputPos)
+        valueDictPos = searchCharPos(inputValue)
     }
-    if(dicDigram = null){
-        inputOffset = 1;
-        digram = cargarLetra(CIPos)
-        CDPos = dicPos
-        dicLetra = cargarLetra(CDPos)
-        while (CDPos != dicDigramPos ){
-            if ( dicLetra == digram ){
-                escribirPos(CDPos)
-                break;
-            }
-            CDPos += 1
-            dicLetra = cargarLetra(CDPos)
-        }
-        if(CDPos == dicDigramPos){
-            escribirLetra(carRaro)
-        }
+    writeEncoding(valueDictPos)
+    inputPos = inputPos + move
+    inputValue = loadDigram(inputPos)
+}
+
+searchDigramPos(inputValue) {
+    dictPos = dictDigsStart;
+    dictValue = loadDigram(dictPos)
+    while (dictValue != null) {
+        if (inputValue == dictValue) return dictPos;
+        dictPos = dictPos + 2;
+        dictValue = loadDigram(dictPos)
     }
+    return 0;
+}
 
-    CIPos += inputOffset
-    digram = cargarDigrama(CIPos)
-
-    inputOffset = 2;
+searchCharPos(inputValue) {
+    dictPos = dictStart;
+    dictValue = loadChar(dictPos)
+    while (dictValue != null) {
+        if (inputValue == dictValue) return dictPos;
+        dictPos = dictPos + 1;
+        dictValue = loadChar(dictPos)
+    }
+    return 0;
 }
