@@ -9,6 +9,9 @@ dict_buffer_size:	.half 20480
 input_file: 		.asciiz "digram_test.java"
 dict_file: 		.asciiz "dictionary.txt"
 output_file: 		.asciiz "output.txt"
+message1: 		.asciiz "The recieved file has a size of: "
+message2: 		.asciiz "The compressed file has a size of: "
+message3: 		.asciiz "The compression rate achieved was: "
 
 .align 2
 dict_buffer: 		.space 20480
@@ -18,7 +21,9 @@ input_buffer:	 	.space 20480
 
 .text
 
-li 	$s7, 2
+li	$s5, 0
+li 	$s7, 2			# Input movement rate (moving 1 or 2 chars)
+
 la 	$t0, dict_buffer
 lbu 	$t1, letters_size
 add 	$t0, $t0, $t1
@@ -28,6 +33,7 @@ la 	$a0, input_file		# Opens input file as read-only mode
 la	$a1, input_buffer
 lh	$a2, input_buffer_size
 jal	Open_Read
+move	$s6, $v0
 
 la 	$a0, dict_file		# Opens dict file as read-only mode
 la	$a1, dict_buffer
@@ -39,7 +45,7 @@ la 	$a0, output_file
 li 	$a1, 9
 li 	$a2, 0
 syscall
-move 	$s5, $v0
+move 	$s4, $v0
 
 
 la 	$s0, input_buffer
@@ -64,8 +70,9 @@ Loop1:
 	move	$s2, $v0
 	
 	On_Found:
+	addi	$s5, $s5, 1
 	move	$a0, $s2		# When a digram or char was found
-	move	$a1, $s5
+	move	$a1, $s4
 	jal	Write_Code
 	
 	add $s0, $s0, $s7
@@ -228,3 +235,37 @@ Print:
 ####################################################################################################
 # END OF THE PROGRAM
 End_Program:
+
+li	$s5, 80
+mtc1	$s6, $f0
+cvt.s.w	$f0, $f0
+mtc1	$s5, $f1
+cvt.s.w	$f1, $f1
+div.s	$f2, $f0, $f1
+
+li	$v0, 4
+la	$a0, message1
+syscall
+mov.s	$f12, $f0
+li	$v0, 2
+syscall
+li	$a0, 0
+jal	Print
+
+li	$v0, 4
+la	$a0, message2
+syscall
+mov.s	$f12, $f1
+li	$v0, 2
+syscall
+li	$a0, 0
+jal	Print
+
+li	$v0, 4
+la	$a0, message3
+syscall
+mov.s	$f12, $f2
+li	$v0, 2
+syscall
+li	$a0, 0
+jal	Print

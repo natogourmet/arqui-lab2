@@ -1,6 +1,6 @@
 .data 
-	digrams: 	.asciiz "output.bin"
-	file: 		.asciiz "dict.txt"
+	digrams: 	.asciiz "digrams.bin"
+	file: 		.asciiz "dictionary.txt"
 	print: 		.word 0
 	
 .align 2
